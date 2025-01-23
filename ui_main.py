@@ -244,22 +244,39 @@ class MainWindow(QMainWindow):
         content = self.editor.toPlainText()
         self.update_preview(content)
     
+    def translate_standard_buttons(self, message_box):
+        """Translate standard buttons in a QMessageBox"""
+        for button in message_box.buttons():
+            if message_box.standardButton(button) == QMessageBox.Yes:
+                button.setText(self.translator.get_text('standard_yes'))
+            elif message_box.standardButton(button) == QMessageBox.No:
+                button.setText(self.translator.get_text('standard_no'))
+            elif message_box.standardButton(button) == QMessageBox.Cancel:
+                button.setText(self.translator.get_text('standard_cancel'))
+            elif message_box.standardButton(button) == QMessageBox.Ok:
+                button.setText(self.translator.get_text('standard_ok'))
+    
     def save_content(self):
         if self.current_node_id is not None:
             content = self.editor.toPlainText()
             database.update_node(self.current_node_id, content=content)
-            QMessageBox.information(
-                self,
-                self.translator.get_text('success'),
-                self.translator.get_text('note_saved')
-            )
+            msg = QMessageBox(self)
+            msg.setWindowTitle(self.translator.get_text('success'))
+            msg.setText(self.translator.get_text('note_saved'))
+            msg.setStandardButtons(QMessageBox.Ok)
+            self.translate_standard_buttons(msg)
+            msg.exec_()
     
     def add_node(self):
-        title, ok = QInputDialog.getText(
-            self,
-            self.translator.get_text('new_node'),
-            self.translator.get_text('node_title')
-        )
+        dialog = QInputDialog(self)
+        dialog.setWindowTitle(self.translator.get_text('new_node'))
+        dialog.setLabelText(self.translator.get_text('node_title'))
+        dialog.setOkButtonText(self.translator.get_text('standard_ok'))
+        dialog.setCancelButtonText(self.translator.get_text('standard_cancel'))
+        
+        ok = dialog.exec_()
+        title = dialog.textValue()
+        
         if ok and title:
             new_id = database.create_node(
                 title, 
@@ -274,13 +291,12 @@ class MainWindow(QMainWindow):
         if self.current_node_id is None:
             return
             
-        reply = QMessageBox.question(
-            self,
-            self.translator.get_text('confirmation'),
-            self.translator.get_text('delete_confirm'),
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
+        msg = QMessageBox(self)
+        msg.setWindowTitle(self.translator.get_text('confirmation'))
+        msg.setText(self.translator.get_text('delete_confirm'))
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        self.translate_standard_buttons(msg)
+        reply = msg.exec_()
         
         if reply == QMessageBox.Yes:
             database.delete_node(self.current_node_id)
