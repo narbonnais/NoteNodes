@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QTextEdit, QTextBrowser, QInputDialog, QMessageBox, QSplitter,
-    QMenu, QSizePolicy, QComboBox
+    QMenu, QSizePolicy, QComboBox, QMainWindow, QMenuBar, QAction
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -11,7 +11,7 @@ from models import Node
 from utils import markdown_to_html
 from translations import Translator
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.translator = Translator()
@@ -21,21 +21,16 @@ class MainWindow(QWidget):
         self.setWindowTitle(self.translator.get_text('window_title'))
         self.resize(1200, 800)
         
+        # Create central widget
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        # Create menu bar
+        self.create_menu_bar()
+        
         # Layout principal
         self.layout = QHBoxLayout()
-        self.setLayout(self.layout)
-        
-        # Add language selector at the top
-        top_layout = QHBoxLayout()
-        language_selector = QComboBox()
-        language_selector.addItem("English", "en")
-        language_selector.addItem("Français", "fr")
-        language_selector.currentIndexChanged.connect(self.change_language)
-        top_layout.addWidget(language_selector)
-        top_layout.addStretch()
-        
-        main_layout = QVBoxLayout()
-        main_layout.addLayout(top_layout)
+        central_widget.setLayout(self.layout)
         
         # Splitter principal
         self.splitter = QSplitter(Qt.Horizontal)
@@ -155,6 +150,55 @@ class MainWindow(QWidget):
         self.setMinimumSize(800, 600)  # Set minimum size
         
         # Update text for existing widgets
+        self.tree.setHeaderLabel(self.translator.get_text('notes'))
+        self.btn_add.setText(self.translator.get_text('new'))
+        self.btn_delete.setText(self.translator.get_text('delete'))
+        self.btn_save.setText(self.translator.get_text('save'))
+    
+    def create_menu_bar(self):
+        menubar = self.menuBar()
+        
+        # Settings menu
+        settings_menu = menubar.addMenu(self.translator.get_text('settings'))
+        
+        # Language submenu
+        language_menu = settings_menu.addMenu(self.translator.get_text('language'))
+        
+        # Language actions
+        english_action = QAction('English', self)
+        english_action.setData('en')
+        english_action.triggered.connect(self.change_language)
+        
+        french_action = QAction('Français', self)
+        french_action.setData('fr')
+        french_action.triggered.connect(self.change_language)
+        
+        spanish_action = QAction('Español', self)
+        spanish_action.setData('es')
+        spanish_action.triggered.connect(self.change_language)
+        
+        korean_action = QAction('한국어', self)
+        korean_action.setData('ko')
+        korean_action.triggered.connect(self.change_language)
+        
+        language_menu.addAction(english_action)
+        language_menu.addAction(french_action)
+        language_menu.addAction(spanish_action)
+        language_menu.addAction(korean_action)
+    
+    def change_language(self):
+        action = self.sender()
+        lang_code = action.data()
+        self.translator.set_language(lang_code)
+        self.update_ui_texts()
+        # Update menu texts
+        settings_menu = self.menuBar().actions()[0].menu()
+        settings_menu.setTitle(self.translator.get_text('settings'))
+        settings_menu.actions()[0].menu().setTitle(self.translator.get_text('language'))
+    
+    def update_ui_texts(self):
+        """Update all UI texts after language change"""
+        self.setWindowTitle(self.translator.get_text('window_title'))
         self.tree.setHeaderLabel(self.translator.get_text('notes'))
         self.btn_add.setText(self.translator.get_text('new'))
         self.btn_delete.setText(self.translator.get_text('delete'))
@@ -324,18 +368,4 @@ class MainWindow(QWidget):
         if action == new_action:
             self.add_node()
         elif action == delete_action:
-            self.delete_node()
-
-    def change_language(self, index):
-        combo = self.sender()
-        lang_code = combo.itemData(index)
-        self.translator.set_language(lang_code)
-        self.update_ui_texts()
-    
-    def update_ui_texts(self):
-        """Update all UI texts after language change"""
-        self.setWindowTitle(self.translator.get_text('window_title'))
-        self.tree.setHeaderLabel(self.translator.get_text('notes'))
-        self.btn_add.setText(self.translator.get_text('new'))
-        self.btn_delete.setText(self.translator.get_text('delete'))
-        self.btn_save.setText(self.translator.get_text('save')) 
+            self.delete_node() 
