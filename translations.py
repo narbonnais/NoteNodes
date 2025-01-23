@@ -71,11 +71,14 @@ TRANSLATIONS = {
 
 class Translator:
     def __init__(self):
-        self.current_language = 'en'
+        from database import get_setting
+        self.current_language = get_setting('language', 'en')
     
     def set_language(self, lang_code):
         if lang_code in TRANSLATIONS:
+            from database import set_setting
             self.current_language = lang_code
+            set_setting('language', lang_code)
     
     def get_text(self, key):
         return TRANSLATIONS[self.current_language].get(key, key) 

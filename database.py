@@ -25,6 +25,14 @@ def init_db():
             FOREIGN KEY(parent_id) REFERENCES nodes(id)
         );
     """)
+    
+    # Add settings table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        );
+    """)
     conn.commit()
     conn.close()
 
@@ -109,5 +117,23 @@ def update_node_parent(node_id, new_parent_id):
         SET parent_id = ? 
         WHERE id = ?
     """, (new_parent_id, node_id))
+    conn.commit()
+    conn.close()
+
+def get_setting(key, default=None):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT value FROM settings WHERE key = ?", (key,))
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else default
+
+def set_setting(key, value):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR REPLACE INTO settings (key, value)
+        VALUES (?, ?)
+    """, (key, value))
     conn.commit()
     conn.close() 
