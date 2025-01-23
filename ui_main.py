@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QPushButton, QTextEdit, QLabel, QInputDialog, QMessageBox, QSplitter
+    QPushButton, QTextEdit, QLabel, QInputDialog, QMessageBox, QSplitter,
+    QMenu
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -39,7 +40,9 @@ class MainWindow(QWidget):
         self.tree.itemClicked.connect(self.on_item_click)
         self.tree.itemExpanded.connect(self.on_item_expanded)
         self.tree.itemCollapsed.connect(self.on_item_collapsed)
-        self.tree.dropEvent = self.handleDropEvent  # Override dropEvent
+        self.tree.dropEvent = self.handleDropEvent
+        self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree.customContextMenuRequested.connect(self.show_context_menu)
         self.left_layout.addWidget(self.tree)
         
         # Boutons de gestion des nœuds
@@ -226,4 +229,31 @@ class MainWindow(QWidget):
             WHERE id = ?
         """, (new_parent_id, node_id))
         conn.commit()
-        conn.close() 
+        conn.close()
+
+    def show_context_menu(self, position):
+        # Create context menu
+        context_menu = QMenu(self)
+        
+        # Add actions
+        new_action = context_menu.addAction("Nouveau nœud")
+        delete_action = context_menu.addAction("Supprimer")
+        
+        # Get the item at the clicked position
+        item = self.tree.itemAt(position)
+        if item:
+            self.current_node_id = item.data(0, Qt.UserRole)
+        else:
+            self.current_node_id = None
+            
+        # Enable/disable delete action based on whether an item is selected
+        delete_action.setEnabled(item is not None)
+        
+        # Show the menu and get the chosen action
+        action = context_menu.exec_(self.tree.viewport().mapToGlobal(position))
+        
+        # Handle the chosen action
+        if action == new_action:
+            self.add_node()
+        elif action == delete_action:
+            self.delete_node() 
