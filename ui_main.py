@@ -63,15 +63,29 @@ class MainWindow(QWidget):
         self.right_layout = QVBoxLayout()
         self.right_panel.setLayout(self.right_layout)
         
+        # Create vertical splitter for editor and preview
+        self.right_splitter = QSplitter(Qt.Vertical)
+        
+        # Editor container
+        self.editor_container = QWidget()
+        self.editor_layout = QVBoxLayout()
+        self.editor_container.setLayout(self.editor_layout)
+        
         # Zone d'édition
         self.editor = QTextEdit()
         self.editor.textChanged.connect(self.on_text_changed)
-        self.right_layout.addWidget(self.editor)
+        self.editor.setMinimumHeight(200)  # Set minimum height
+        self.editor_layout.addWidget(self.editor)
         
         # Bouton de sauvegarde
         self.btn_save = QPushButton("Enregistrer")
         self.btn_save.clicked.connect(self.save_content)
-        self.right_layout.addWidget(self.btn_save)
+        self.editor_layout.addWidget(self.btn_save)
+        
+        # Preview container
+        self.preview_container = QWidget()
+        self.preview_layout = QVBoxLayout()
+        self.preview_container.setLayout(self.preview_layout)
         
         # Aperçu HTML
         self.preview_label = QLabel()
@@ -86,7 +100,15 @@ class MainWindow(QWidget):
         self.preview_label.setWordWrap(True)
         self.preview_label.setAlignment(Qt.AlignTop)
         self.preview_label.setTextFormat(Qt.RichText)
-        self.right_layout.addWidget(self.preview_label)
+        self.preview_label.setMinimumHeight(200)  # Set minimum height
+        self.preview_layout.addWidget(self.preview_label)
+        
+        # Add containers to right splitter
+        self.right_splitter.addWidget(self.editor_container)
+        self.right_splitter.addWidget(self.preview_container)
+        
+        # Add right splitter to right layout
+        self.right_layout.addWidget(self.right_splitter)
         
         # Ajouter les panneaux au splitter
         self.splitter.addWidget(self.left_panel)
