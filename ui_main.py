@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QTextEdit, QTextBrowser, QInputDialog, QMessageBox, QSplitter,
-    QMenu, QSizePolicy, QComboBox, QMainWindow, QMenuBar, QAction
+    QMenu, QSizePolicy, QComboBox, QMainWindow, QMenuBar, QAction, QShortcut
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QKeySequence
 
 import database
 from models import Node
@@ -24,6 +24,10 @@ class MainWindow(QMainWindow):
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        
+        # Add keyboard shortcuts
+        save_shortcut = QShortcut(QKeySequence.Save, self)
+        save_shortcut.activated.connect(self.save_content)
         
         # Create menu bar
         self.create_menu_bar()
