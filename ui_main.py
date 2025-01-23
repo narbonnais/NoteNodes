@@ -16,7 +16,7 @@ class MainWindow(QWidget):
         self.init_ui()
         
     def init_ui(self):
-        self.setWindowTitle("CherryTree Clone")
+        self.setWindowTitle("NoteNodes")
         self.resize(1200, 800)
         
         # Layout principal
