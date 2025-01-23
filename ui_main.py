@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QTextEdit, QTextBrowser, QInputDialog, QMessageBox, QSplitter,
-    QMenu, QSizePolicy
+    QMenu, QSizePolicy, QComboBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -9,19 +9,33 @@ from PyQt5.QtGui import QFont
 import database
 from models import Node
 from utils import markdown_to_html
+from translations import Translator
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.translator = Translator()
         self.init_ui()
         
     def init_ui(self):
-        self.setWindowTitle("NoteNodes")
+        self.setWindowTitle(self.translator.get_text('window_title'))
         self.resize(1200, 800)
         
         # Layout principal
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
+        
+        # Add language selector at the top
+        top_layout = QHBoxLayout()
+        language_selector = QComboBox()
+        language_selector.addItem("English", "en")
+        language_selector.addItem("Français", "fr")
+        language_selector.currentIndexChanged.connect(self.change_language)
+        top_layout.addWidget(language_selector)
+        top_layout.addStretch()
+        
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(top_layout)
         
         # Splitter principal
         self.splitter = QSplitter(Qt.Horizontal)
@@ -33,7 +47,7 @@ class MainWindow(QWidget):
         
         # Arbre des nœuds avec support du drag & drop
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabel("Notes")
+        self.tree.setHeaderLabel(self.translator.get_text('notes'))
         self.tree.setDragEnabled(True)
         self.tree.setAcceptDrops(True)
         self.tree.setDragDropMode(QTreeWidget.InternalMove)
@@ -48,11 +62,11 @@ class MainWindow(QWidget):
         # Boutons de gestion des nœuds
         self.buttons_layout = QHBoxLayout()
         
-        self.btn_add = QPushButton("Nouveau")
+        self.btn_add = QPushButton(self.translator.get_text('new'))
         self.btn_add.clicked.connect(self.add_node)
         self.buttons_layout.addWidget(self.btn_add)
         
-        self.btn_delete = QPushButton("Supprimer")
+        self.btn_delete = QPushButton(self.translator.get_text('delete'))
         self.btn_delete.clicked.connect(self.delete_node)
         self.buttons_layout.addWidget(self.btn_delete)
         
@@ -79,7 +93,7 @@ class MainWindow(QWidget):
         self.editor_layout.addWidget(self.editor)
         
         # Bouton de sauvegarde
-        self.btn_save = QPushButton("Enregistrer")
+        self.btn_save = QPushButton(self.translator.get_text('save'))
         self.btn_save.clicked.connect(self.save_content)
         self.editor_layout.addWidget(self.btn_save)
         
@@ -139,6 +153,12 @@ class MainWindow(QWidget):
         
         # Add this line at the end of init_ui
         self.setMinimumSize(800, 600)  # Set minimum size
+        
+        # Update text for existing widgets
+        self.tree.setHeaderLabel(self.translator.get_text('notes'))
+        self.btn_add.setText(self.translator.get_text('new'))
+        self.btn_delete.setText(self.translator.get_text('delete'))
+        self.btn_save.setText(self.translator.get_text('save'))
     
     def load_tree_nodes(self, parent_id, parent_item):
         children = database.get_children(parent_id)
@@ -184,10 +204,18 @@ class MainWindow(QWidget):
         if self.current_node_id is not None:
             content = self.editor.toPlainText()
             database.update_node(self.current_node_id, content=content)
-            QMessageBox.information(self, "Succès", "Note enregistrée !")
+            QMessageBox.information(
+                self,
+                self.translator.get_text('success'),
+                self.translator.get_text('note_saved')
+            )
     
     def add_node(self):
-        title, ok = QInputDialog.getText(self, "Nouveau nœud", "Titre du nœud:")
+        title, ok = QInputDialog.getText(
+            self,
+            self.translator.get_text('new_node'),
+            self.translator.get_text('node_title')
+        )
         if ok and title:
             new_id = database.create_node(
                 title, 
@@ -204,8 +232,8 @@ class MainWindow(QWidget):
             
         reply = QMessageBox.question(
             self,
-            "Confirmation",
-            "Voulez-vous vraiment supprimer ce nœud et tous ses enfants ?",
+            self.translator.get_text('confirmation'),
+            self.translator.get_text('delete_confirm'),
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
@@ -239,10 +267,13 @@ class MainWindow(QWidget):
         # Mettre à jour la base de données
         try:
             self.update_node_parent(node_id, new_parent_id)
-            # Accepter l'événement pour permettre le déplacement visuel
             QTreeWidget.dropEvent(self.tree, event)
         except Exception as e:
-            QMessageBox.warning(self, "Erreur", f"Impossible de déplacer le nœud : {str(e)}")
+            QMessageBox.warning(
+                self, 
+                self.translator.get_text('error'),
+                self.translator.get_text('move_error').format(str(e))
+            )
             event.ignore()
 
     def update_node_parent(self, node_id, new_parent_id):
@@ -273,8 +304,8 @@ class MainWindow(QWidget):
         context_menu = QMenu(self)
         
         # Add actions
-        new_action = context_menu.addAction("Nouveau nœud")
-        delete_action = context_menu.addAction("Supprimer")
+        new_action = context_menu.addAction(self.translator.get_text('new_node'))
+        delete_action = context_menu.addAction(self.translator.get_text('delete'))
         
         # Get the item at the clicked position
         item = self.tree.itemAt(position)
@@ -293,4 +324,18 @@ class MainWindow(QWidget):
         if action == new_action:
             self.add_node()
         elif action == delete_action:
-            self.delete_node() 
+            self.delete_node()
+
+    def change_language(self, index):
+        combo = self.sender()
+        lang_code = combo.itemData(index)
+        self.translator.set_language(lang_code)
+        self.update_ui_texts()
+    
+    def update_ui_texts(self):
+        """Update all UI texts after language change"""
+        self.setWindowTitle(self.translator.get_text('window_title'))
+        self.tree.setHeaderLabel(self.translator.get_text('notes'))
+        self.btn_add.setText(self.translator.get_text('new'))
+        self.btn_delete.setText(self.translator.get_text('delete'))
+        self.btn_save.setText(self.translator.get_text('save')) 
