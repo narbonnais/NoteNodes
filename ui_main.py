@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QPushButton, QTextEdit, QLabel, QInputDialog, QMessageBox, QSplitter,
-    QMenu
+    QMenu, QSizePolicy
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -102,6 +102,22 @@ class MainWindow(QWidget):
         
         # Charger l'arbre initial
         self.load_tree_nodes(None, self.tree.invisibleRootItem())
+        
+        # Set size policies for panels
+        self.left_panel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        self.right_panel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        
+        # Set size policy for preview label to prevent auto-expansion
+        self.preview_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        
+        # Set size policy for editor to prevent auto-expansion
+        self.editor.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        
+        # Set size policy for tree to prevent auto-expansion
+        self.tree.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        
+        # Add this line at the end of init_ui
+        self.setMinimumSize(800, 600)  # Set minimum size
     
     def load_tree_nodes(self, parent_id, parent_item):
         children = database.get_children(parent_id)
