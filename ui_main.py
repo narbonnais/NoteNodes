@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
-    QPushButton, QTextEdit, QLabel, QInputDialog, QMessageBox, QSplitter,
+    QPushButton, QTextEdit, QTextBrowser, QInputDialog, QMessageBox, QSplitter,
     QMenu, QSizePolicy
 )
 from PyQt5.QtCore import Qt
@@ -71,10 +71,11 @@ class MainWindow(QWidget):
         self.editor_layout = QVBoxLayout()
         self.editor_container.setLayout(self.editor_layout)
         
-        # Zone d'édition
+        # Zone d'édition - force plain text
         self.editor = QTextEdit()
+        self.editor.setAcceptRichText(False)
         self.editor.textChanged.connect(self.on_text_changed)
-        self.editor.setMinimumHeight(200)  # Set minimum height
+        self.editor.setMinimumHeight(200)
         self.editor_layout.addWidget(self.editor)
         
         # Bouton de sauvegarde
@@ -87,20 +88,18 @@ class MainWindow(QWidget):
         self.preview_layout = QVBoxLayout()
         self.preview_container.setLayout(self.preview_layout)
         
-        # Aperçu HTML
-        self.preview_label = QLabel()
+        # Remplacer QLabel par QTextBrowser pour l'aperçu
+        self.preview_label = QTextBrowser()
+        self.preview_label.setOpenExternalLinks(True)
         self.preview_label.setStyleSheet("""
-            QLabel {
+            QTextBrowser {
                 background-color: #f8f9fa;
                 padding: 10px;
                 border: 1px solid #dee2e6;
                 border-radius: 4px;
             }
         """)
-        self.preview_label.setWordWrap(True)
-        self.preview_label.setAlignment(Qt.AlignTop)
-        self.preview_label.setTextFormat(Qt.RichText)
-        self.preview_label.setMinimumHeight(200)  # Set minimum height
+        self.preview_label.setMinimumHeight(200)
         self.preview_layout.addWidget(self.preview_label)
         
         # Add containers to right splitter
