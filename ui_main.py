@@ -52,6 +52,8 @@ class MainWindow(QMainWindow):
         self.tree.dropEvent = self.handleDropEvent
         self.tree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree.customContextMenuRequested.connect(self.show_context_menu)
+        self.tree.setEditTriggers(QTreeWidget.EditKeyPressed | QTreeWidget.DoubleClicked)
+        self.tree.itemChanged.connect(self.on_item_renamed)
         self.left_layout.addWidget(self.tree)
         
         # Boutons de gestion des nœuds
@@ -210,6 +212,7 @@ class MainWindow(QMainWindow):
             node_id, p_id, title, content, collapsed = row
             item = QTreeWidgetItem([title])
             item.setData(0, Qt.UserRole, node_id)
+            self.make_item_editable(item)  # Make the new item editable
             parent_item.addChild(item)
             
             if collapsed:
@@ -365,6 +368,7 @@ class MainWindow(QMainWindow):
         
         # Add actions
         new_action = context_menu.addAction(self.translator.get_text('new_node'))
+        rename_action = context_menu.addAction(self.translator.get_text('rename'))
         delete_action = context_menu.addAction(self.translator.get_text('delete'))
         
         # Get the item at the clicked position
@@ -374,7 +378,8 @@ class MainWindow(QMainWindow):
         else:
             self.current_node_id = None
             
-        # Enable/disable delete action based on whether an item is selected
+        # Enable/disable actions based on whether an item is selected
+        rename_action.setEnabled(item is not None)
         delete_action.setEnabled(item is not None)
         
         # Show the menu and get the chosen action
@@ -383,5 +388,23 @@ class MainWindow(QMainWindow):
         # Handle the chosen action
         if action == new_action:
             self.add_node()
+        elif action == rename_action:
+            self.tree.editItem(item, 0)
         elif action == delete_action:
-            self.delete_node() 
+            self.delete_node()
+
+    def on_item_renamed(self, item, column):
+        """Handle item rename events"""
+        if column == 0:  # Title column
+            node_id = item.data(0, Qt.UserRole)
+            new_title = item.text(0)
+            if new_title.strip():  # Don't allow empty titles
+                database.update_node(node_id, title=new_title)
+            else:
+                # Revert to original title if empty
+                node_data = database.get_node(node_id)
+                if node_data:
+                    item.setText(0, node_data[2])  # Set back to original title
+
+    def make_item_editable(self, item):
+        item.setFlags(item.flags() | Qt.ItemIsEditable)

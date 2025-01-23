@@ -22,6 +22,7 @@ TRANSLATIONS = {
         'standard_no': 'No',
         'standard_cancel': 'Cancel',
         'standard_ok': 'OK',
+        'rename': 'Rename',
     },
     'fr': {
         'window_title': 'NoteNodes',
@@ -46,6 +47,7 @@ TRANSLATIONS = {
         'standard_no': 'Non',
         'standard_cancel': 'Annuler',
         'standard_ok': 'OK',
+        'rename': 'Renommer',
     },
     'es': {
         'window_title': 'NoteNodes',
@@ -70,6 +72,7 @@ TRANSLATIONS = {
         'standard_no': 'No',
         'standard_cancel': 'Cancelar',
         'standard_ok': 'Aceptar',
+        'rename': 'Renombrar',
     },
     'ko': {
         'window_title': 'NoteNodes',
@@ -94,6 +97,7 @@ TRANSLATIONS = {
         'standard_no': '아니오',
         'standard_cancel': '취소',
         'standard_ok': '확인',
+        'rename': '이름 바꾸기',
     }
 }
 
